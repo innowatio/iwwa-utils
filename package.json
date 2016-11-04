@@ -1,0 +1,58 @@
+{
+  "name": "iwwa-utils",
+  "version": "1.0.0",
+  "description": "A library of utils used in innowatio projects",
+  "main": "index.js",
+  "nyc": {
+    "require": [
+      "babel-register"
+    ],
+    "sourceMap": false,
+    "instrument": false
+  },
+  "scripts": {
+    "build": "babel src -d build",
+    "codecov": "NODE_ENV=test NODE_PATH=src nyc mocha report --reporter=text-lcov > coverage.lcov --recursive && codecov",
+    "coverage": "NODE_ENV=test NODE_PATH=src nyc mocha --recursive",
+    "dev": "npm test -- --watch",
+    "lint": "eslint src test",
+    "test": "NODE_ENV=test NODE_PATH=src mocha --compilers js:babel-register --require babel-polyfill --recursive"
+  },
+  "keywords": [
+    "library",
+    "utils"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/innowatio/iwwa-utils.git"
+  },
+  "bugs": {
+    "url": "https://github.com/innowatio/iwwa-utils/issues"
+  },
+  "author": "Team Wattellina <wattellina@mondora.com>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.18.0",
+    "babel-eslint": "^7.1.0",
+    "babel-plugin-istanbul": "^2.0.3",
+    "babel-plugin-rewire": "^1.0.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-0": "^6.16.0",
+    "babel-register": "^6.18.0",
+    "chai": "^3.5.0",
+    "codecov": "^1.0.1",
+    "eslint": "^3.8.1",
+    "immutable": "^3.8.1",
+    "mocha": "^3.1.2",
+    "moment": "^2.15.2",
+    "nyc": "^8.3.2",
+    "sinon": "^1.17.6",
+    "sinon-chai": "^2.8.0"
+  },
+  "dependencies": {
+    "bignumber.js": "^2.4.0",
+    "lodash.isobject": "^3.0.2",
+    "lodash.range": "^3.2.0"
+  }
+}

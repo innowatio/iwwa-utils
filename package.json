@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "bignumber.js": "^2.4.0",
+    "lodash.isempty": "^4.4.0",
     "lodash.isobject": "^3.0.2",
     "lodash.range": "^3.2.0"
   }

@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import {Map} from "immutable";
+import isEmpty from "lodash.isempty";
 import isObject from "lodash.isobject";
 import range from "lodash.range";
 import moment from "moment";
@@ -44,6 +45,24 @@ function getMeasurementValues (startYear, endYear, period, measure) {
     }
 }
 
+function getMeasurementValuesByPeriod (period, aggregates) {
+    const startYear = `${moment.utc(period.start).year()}`;
+    const endYear = `${moment.utc(period.end).year()}`;
+    return aggregates
+        // filter over the year in selected period
+        .filter(agg => agg.get("year") === startYear || agg.get("year") === endYear)
+        // creates an array of object for different years
+        .map(agg => ({
+            year: agg.get("year"),
+            measurementValues: agg.get("measurementValues").split(",")
+        }))
+        // create an array of values to sum in selected period
+        .reduce((acc, measure) => {
+            const measurementValues = getMeasurementValues(startYear, endYear, period, measure);
+            return acc.concat(measurementValues);
+        }, []);
+}
+
 /**
 *   @param {object} period - {start: "YYYY-MM-DDTHH:mm:ssZ", end: "YYYY-MM-DDTHH:mm:ssZ"}
 *   @param {Map} aggregates - the yearly-consumption
@@ -60,7 +79,7 @@ function getMeasurementValues (startYear, endYear, period, measure) {
 *
 *   @return {number} sumByPeriod - return the sum of consumption in selected period
 */
-export function getSumByPeriod (period, aggregates) {
+export function getSumByPeriod (period, aggregates, measurementValuesByPeriod) {
     // The aggregates should be an Immutable.js.
     if (!Map.isMap(aggregates)) {
         throw new IwwaUtilsError("collections should be immutable.js");
@@ -69,25 +88,14 @@ export function getSumByPeriod (period, aggregates) {
     if (!isObject(period)) {
         throw new IwwaUtilsError("period should be an Object");
     }
-
-    const startYear = `${moment.utc(period.start).year()}`;
-    const endYear = `${moment.utc(period.end).year()}`;
-    const sumByPeriod = aggregates
-        // filter over the year in selected period
-        .filter(agg => agg.get("year") === startYear || agg.get("year") === endYear)
-        // creates an array of object for different years
-        .map(agg => ({
-            year: agg.get("year"),
-            measurementValues: agg.get("measurementValues").split(",")
-        }))
-        // create an array of values to sum in selected period
-        .reduce((acc, measure) => {
-            const measurementValues = getMeasurementValues(startYear, endYear, period, measure);
-            return acc.concat(measurementValues);
-        }, [])
-        //  make sum of the values in array
-        .reduce((acc, value) => acc.plus(value || 0), new BigNumber(0));
-    return parseFloat(sumByPeriod);
+    // get the values to sum
+    const measurementValues = (
+        measurementValuesByPeriod ?
+        measurementValuesByPeriod :
+        getMeasurementValuesByPeriod(period, aggregates)
+    );
+    //  make sum of the values in array;
+    return parseFloat(measurementValues.reduce((acc, value) => acc.plus(value || 0), new BigNumber(0)));
 }
 
 /**
@@ -122,11 +130,16 @@ export function getAverageByPeriod (aggregates, offsetPeriod, offsetNumber = 1) 
                 start: moment.utc().subtract({[offsetPeriod]: index * offsetNumber}).startOf(offsetPeriod).toISOString(),
                 end: moment.utc().subtract({[offsetPeriod]: index * offsetNumber}).endOf(offsetPeriod).toISOString()
             };
-            return getSumByPeriod(period, aggregates);
+            const measurementValuesByPeriod = getMeasurementValuesByPeriod(period, aggregates);
+            // If in a period there is a day without data, return NaN
+            if (isEmpty(measurementValuesByPeriod) || measurementValuesByPeriod.indexOf("") >= 0) {
+                return NaN;
+            }
+            return getSumByPeriod(period, aggregates, measurementValuesByPeriod);
         })
-        // Filter all 0. If a period has consumption equal to 0, that period is
-        // considered without data
-        .filter(value => value !== 0);
+        // Filter all NaN. If a day in a period has consumption equal to NaN,
+        // all that period is considered without data
+        .filter(value => !isNaN(value));
     const average = sumsByPeriod
         .reduce((acc, value) => acc.plus(value || 0), new BigNumber(0))
         .dividedBy(sumsByPeriod.length)

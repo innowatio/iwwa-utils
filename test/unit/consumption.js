@@ -297,17 +297,17 @@ describe("`consumption` utils", () => {
         it("return the average of the weekly consumption for one year of data [CASE: locale `it`]", () => {
             moment.locale("it");
             const ret = getAverageByPeriod(aggregates, "week");
-            expect(ret).to.equal(33.96);
+            expect(ret).to.equal(34.34);
         });
 
         it("return the average of the weekly consumption for one year of data", () => {
             const ret = getAverageByPeriod(aggregates, "week");
-            expect(ret).to.equal(33.93);
+            expect(ret).to.equal(34.35);
         });
 
         it("return the average of the monthly consumption for one year of data", () => {
             const ret = getAverageByPeriod(aggregates, "month");
-            expect(ret).to.equal(147.34);
+            expect(ret).to.equal(149.97);
         });
 
     });

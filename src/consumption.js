@@ -130,6 +130,6 @@ export function getAverageByPeriod (aggregates, offsetPeriod, offsetNumber = 1) 
     const average = sumsByPeriod
         .reduce((acc, value) => acc.plus(value || 0), new BigNumber(0))
         .dividedBy(sumsByPeriod.length)
-        .round(4);
+        .round(2);
     return parseFloat(average);
 }

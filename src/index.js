@@ -1,5 +1,5 @@
 import * as consumption from "./consumption";
 
-export default {
+module.exports = {
     ...consumption
 };

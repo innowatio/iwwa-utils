@@ -291,23 +291,23 @@ describe("`consumption` utils", () => {
 
         it("return the average of the same day of the week consumption for one year of data", () => {
             const ret = getAverageByPeriod(aggregates, "day", 7);
-            expect(ret).to.equal(4.7776);
+            expect(ret).to.equal(4.78);
         });
 
         it("return the average of the weekly consumption for one year of data [CASE: locale `it`]", () => {
             moment.locale("it");
             const ret = getAverageByPeriod(aggregates, "week");
-            expect(ret).to.equal(33.9598);
+            expect(ret).to.equal(33.96);
         });
 
         it("return the average of the weekly consumption for one year of data", () => {
             const ret = getAverageByPeriod(aggregates, "week");
-            expect(ret).to.equal(33.9328);
+            expect(ret).to.equal(33.93);
         });
 
         it("return the average of the monthly consumption for one year of data", () => {
             const ret = getAverageByPeriod(aggregates, "month");
-            expect(ret).to.equal(147.3367);
+            expect(ret).to.equal(147.34);
         });
 
     });

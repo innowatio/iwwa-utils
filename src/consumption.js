@@ -1,4 +1,4 @@
-import BigNumber from "bignumber.js";
+import BigNumber from "big.js";
 import {Map} from "immutable";
 import isEmpty from "lodash.isempty";
 import isObject from "lodash.isobject";
@@ -142,7 +142,7 @@ export function getAverageByPeriod (aggregates, offsetPeriod, offsetNumber = 1) 
         .filter(value => !isNaN(value));
     const average = sumsByPeriod
         .reduce((acc, value) => acc.plus(value || 0), new BigNumber(0))
-        .dividedBy(sumsByPeriod.length)
+        .div(sumsByPeriod.length)
         .round(2);
     return parseFloat(average);
 }

@@ -310,6 +310,24 @@ describe("`consumption` utils", () => {
             expect(ret).to.equal(149.97);
         });
 
+        it("return the average of the monthly consumption for one year of data", () => {
+            const agg = fromJS({
+                "sensor1-2016-reading-activeEnergy": {
+                    "_id" : "sensor1-2016-reading-activeEnergy",
+                    "year" : "2016",
+                    "sensorId" : "sensor1",
+                    "source" : "reading",
+                    "measurementType" : "activeEnergy",
+                    "measurementValues" : ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,8.642,24.441,22.11,28.75,56.524,88.239,109.615,14.628,22.565,41.896,21.093,24.565,25.738,25.465,29.389,29.901,27.603,60.892,62.112,11.562,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                    "unitOfMeasurement" : "kWh",
+                    "measurementsDeltaInMs" : 86400000
+                }
+            });
+            const ret = getAverageByPeriod(agg, "month");
+            expect(ret).to.equal(0);
+        });
+
+
     });
 
 });

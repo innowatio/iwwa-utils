@@ -142,7 +142,7 @@ export function getAverageByPeriod (aggregates, offsetPeriod, offsetNumber = 1) 
         .filter(value => !isNaN(value));
     const average = sumsByPeriod
         .reduce((acc, value) => acc.plus(value || 0), new BigNumber(0))
-        .div(sumsByPeriod.length)
+        .div(sumsByPeriod.length || 1)
         .round(2);
     return parseFloat(average);
 }

@@ -7,30 +7,18 @@ import moment from "moment";
 
 import IwwaUtilsError from "./lib/iwwa-utils-error";
 
-/**
-*   @param {string} period - period of the time range
-*   example possible period: "day", "week", "month", "year"
+/*
+*   Private function
 */
-export function getTimeRangeByPeriod (period) {
-    const now = moment.utc();
-    return {
-        start: now.startOf(period).toISOString(),
-        end: now.endOf(period).toISOString()
-    };
-}
 
 /**
-*   @param {string} subtractPeriod - period to subtract from now
-*   @param {string} rangePeriod - period to consider
-*   example possible period: "day", "week", "month", "year"
+*   @param {string} startYear - year when init period
+*   @param {string} endYear - year when end period
+*   @param {object} period - period object with start and end key
+*   @param {object} measure - object of measurement
+*
+*   @return {array}
 */
-export function getPreviousPeriod (subtractPeriod, rangePeriod) {
-    return {
-        start: moment.utc().subtract(1, subtractPeriod).startOf(rangePeriod).toISOString(),
-        end: moment.utc().subtract(1, subtractPeriod).endOf(rangePeriod).toISOString()
-    };
-}
-
 function getMeasurementValues (startYear, endYear, period, measure) {
     const startPeriodDay = moment.utc(period.start).dayOfYear();
     const endPeriodDay = moment.utc(period.end).dayOfYear();
@@ -45,6 +33,12 @@ function getMeasurementValues (startYear, endYear, period, measure) {
     }
 }
 
+/**
+*   @param {object} period - period object with start and end key
+*   @param {Immutable.Map} measure - yearly-consumption aggregate of value
+*
+*   @return {array}
+*/
 function getMeasurementValuesByPeriod (period, aggregates) {
     const startYear = `${moment.utc(period.start).year()}`;
     const endYear = `${moment.utc(period.end).year()}`;
@@ -63,30 +57,51 @@ function getMeasurementValuesByPeriod (period, aggregates) {
         }, []);
 }
 
+/*
+*   Public function
+*/
+
+/**
+*   @param {string} period - period of the time range
+*
+*   @return {object}
+*/
+export function getTimeRangeByPeriod (period) {
+    const now = moment.utc();
+    return {
+        start: now.startOf(period).toISOString(),
+        end: now.endOf(period).toISOString()
+    };
+}
+
+/**
+*   @param {string} periodToSubtract - period to subtract from now
+*   @param {string} periodRange - period to consider
+*
+*   @return {object}
+*/
+export function getPreviousPeriod (periodToSubtract, periodRange) {
+    return {
+        start: moment.utc().subtract(1, periodToSubtract).startOf(periodRange).toISOString(),
+        end: moment.utc().subtract(1, periodToSubtract).endOf(periodRange).toISOString()
+    };
+}
+
 /**
 *   @param {object} period - {start: "YYYY-MM-DDTHH:mm:ssZ", end: "YYYY-MM-DDTHH:mm:ssZ"}
-*   @param {Map} aggregates - the yearly-consumption
-*       DB structure:
-*       {
-*           _id: "sensorId-year-source-measurementType",
-*           year: "YYYY",
-*           sensorId: "sensorId",
-*           source: "reading",
-*           measurementType: "activeEnergy",
-*           measurementValues: "",
-*           unitOfMeasurement: ""
-*       }
+*   @param {Immutable.Map} aggregates - the yearly-consumption
+*   @param {array} measurementValuesByPeriod - array of measurementValues
 *
-*   @return {number} sumByPeriod - return the sum of consumption in selected period
+*   @return {number}
 */
 export function getSumByPeriod (period, aggregates, measurementValuesByPeriod) {
     // The aggregates should be an Immutable.js.
     if (!Map.isMap(aggregates)) {
-        throw new IwwaUtilsError("collections should be immutable.js");
+        throw new IwwaUtilsError("[getSumByPeriod]: collections should be immutable.js");
     }
     // Period should be an object
     if (!isObject(period)) {
-        throw new IwwaUtilsError("period should be an Object");
+        throw new IwwaUtilsError("[getSumByPeriod]: period should be an Object");
     }
     // get the values to sum
     const measurementValues = (
@@ -99,26 +114,16 @@ export function getSumByPeriod (period, aggregates, measurementValuesByPeriod) {
 }
 
 /**
-*   @param {Map} aggregates - the yearly-consumption
-*       DB structure:
-*       {
-*           _id: "sensorId-year-source-measurementType",
-*           year: "YYYY",
-*           sensorId: "sensorId",
-*           source: "reading",
-*           measurementType: "activeEnergy",
-*           measurementValues: "",
-*           unitOfMeasurement: ""
-*       }
+*   @param {Immutable.Map} aggregates - the yearly-consumption
 *   @param {string} offsetPeriod - offsetPeriod to take ["day", "week", "month"]
 *   @param {number} offsetNumber - how frequently take the selected offsetPeriod
 *
-*   @return {number} averageByPeriod - return the average of consumption in selected period
+*   @return {number}
 */
 export function getAverageByPeriod (aggregates, offsetPeriod, offsetNumber = 1) {
     // The aggregates should be an Immutable.js.
     if (!Map.isMap(aggregates)) {
-        throw new IwwaUtilsError("collections should be immutable.js");
+        throw new IwwaUtilsError("[getAverageByPeriod]: collections should be immutable.js");
     }
     const year = moment().year();
     const numberOfPeriodInPastYear = moment([year]).diff(moment([year - 1]), offsetPeriod, true);

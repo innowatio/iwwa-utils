@@ -1,6 +1,6 @@
 {
   "name": "iwwa-utils",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A library of utils used in innowatio projects",
   "main": "lib/index.js",
   "nyc": {

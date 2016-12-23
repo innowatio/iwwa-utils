@@ -16,11 +16,12 @@ Library of common utility used in iwwa-front and iwapp
 
 ### Consumption utils
 
-#### getTimeRangeByPeriod(period)
+#### getTimeRangeByPeriod(period, isToNow)
 
 ###### Arguments
 
 * `period` **string** _required_: period to consider `[e.g. "day", "week", "month", "year"]`
+* `isToNow` **boolean** _optional_: if true the end of the range is the current time, if false the end of the day [default value: false]
 
 ###### Example usage
 
@@ -35,12 +36,14 @@ getTimeRangeByPeriod("month")
 }
 ```
 
-#### getPreviousPeriod(periodToSubtract, periodRange)
+#### getPreviousPeriod(periodToSubtract, periodRange, isToNow)
 
 ###### Arguments
 
 * `periodToSubtract` **string** _required_: period to subtract `[e.g. "day", "week", "month", "year"]`
 * `periodRange` **string** _required_: period to consider `[e.g. "day", "week", "month", "year"]`
+* `isToNow` **boolean** _optional_: if true the end of the range is the current time, if false the end of the day [default value: false]
+* `offsetNumber` **number** _optional_: how frequently take the selected offsetPeriod [default value: 1]
 
 ###### Example usage
 
@@ -84,6 +87,38 @@ const period = {
 
 ```js
 getSumByPeriod(period, yearlyAggregates) --> 38
+```
+
+#### getSumByPeriodToNow(period, aggregates, measurementValuesByPeriod)
+
+###### Arguments
+
+* `period` **object** _required_: period object with start and end keys
+* `aggregates` **Immutable.Map** _required_: aggregate yearly-consumption
+* `measurementValuesByPeriod` **array** _optional_: array of measurementValues
+
+###### Example usage
+
+```js
+const dailyAggregates = {
+    _id: "sensorId-2016-01-04-reading-activeEnergy",
+    day: "2016-01-04",
+    sensorId: "sensorId",
+    source: "reading",
+    measurementType: "activeEnergy",
+    measurementTimes: "1451865600,1451865900,1451866200,1451866500,1451866800",
+    measurementValues: "1,2,3,4,4",
+    unitOfMeasurement: "kWh"
+}
+
+const period = {
+    start: "2016-01-04T00:00:00.000Z",
+    end: "2016-01-04T13:00:15.00Z"
+}
+```
+
+```js
+getSumByPeriod(period, yearlyAggregates) --> 10
 ```
 
 #### getAverageByPeriod (aggregates, offsetPeriod, offsetNumber)

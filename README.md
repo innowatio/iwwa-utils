@@ -151,3 +151,17 @@ const offsetNumber = 7;
 ```js
 getAverageByPeriod (aggregates, offsetPeriod, offsetNumber) --> 4.5
 ```
+
+### subscribeDaily utils function
+
+#### subscribeDaily(subscription)
+
+###### Arguments
+
+* `subscription` **function** _required_: the subscription to refresh every days
+
+###### Example usage
+
+```js
+subscribeDaily(() => this.props.asteroid.subscribe("sensors"));
+```

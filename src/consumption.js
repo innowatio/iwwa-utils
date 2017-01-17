@@ -45,8 +45,7 @@ function getMeasurementValuesToNow (period, measure) {
     const {measurementTimes, measurementValues} = measure;
     var result = [];
     for (var x=0; x <= measurementTimes.length; x++) {
-        if (parseInt(measurementTimes[x]) <= endPeriod &&
-            parseInt(measurementTimes[x]) >= startPeriod) {
+        if (parseInt(measurementTimes[x]) <= endPeriod && parseInt(measurementTimes[x]) >= startPeriod) {
             result.push(parseFloat(measurementValues[x]));
         }
     }
@@ -79,25 +78,31 @@ function getMeasurementValuesByPeriod (period, aggregates) {
 
 /**
 *   @param {object} period - period object with start and end key
-*   @param {Immutable.Map} measure - yearly-consumption aggregate of value
+*   @param {Immutable.Map} measure - daily-consumption aggregate of value
 *
 *   @return {array}
 */
+
 function getMeasurementValuesByPeriodToNow (period, aggregates) {
-    return aggregates
-        // filter over the days in selected period
-        .filter(agg => moment.utc(agg.get("day")).isSameOrAfter(moment.utc(period.start).subtract(1, "day")) && moment.utc(agg.get("day")).isSameOrBefore(moment.utc(period.end)))
-        // creates an array of object for different days
-        .map(agg => ({
-            year: agg.get("day"),
-            measurementTimes: agg.get("measurementTimes").split(","),
-            measurementValues: agg.get("measurementValues").split(",")
-        }))
-        // create an array of values to sum in selected period (day, hour)
-        .reduce((acc, measure) => {
-            const measurementValues = getMeasurementValuesToNow(period, measure);
-            return acc.concat(measurementValues);
-        }, []);
+    const sensorId = aggregates.first().get("sensorId");
+    const numberOfDays = parseInt(moment.utc(period.end).diff(period.start, "days")) + 1;
+    const days = numberOfDays !== 0 ? range(0, numberOfDays).map(idx => {
+        return moment.utc(period.start).add({days: idx}).format("YYYY-MM-DD");
+    }) : [];
+    return days.map(day => {
+        const aggregate = aggregates.get(`${sensorId}-${day}-reading-activeEnergy`);
+        return aggregate ? {
+            year: aggregate.get("day"),
+            measurementTimes: aggregate.get("measurementTimes").split(","),
+            measurementValues: aggregate.get("measurementValues").split(",")
+        } : null;
+    })
+    .filter(day => day)
+    // create an array of values to sum in selected period (day, hour)
+    .reduce((acc, measure) => {
+        const measurementValues = getMeasurementValuesToNow(period, measure);
+        return acc.concat(measurementValues);
+    }, []);
 }
 
 /*
@@ -112,8 +117,8 @@ function getMeasurementValuesByPeriodToNow (period, aggregates) {
 */
 export function getTimeRangeByPeriod (period, isToNow = false) {
     return isToNow ? {
-        start: moment().startOf(period).toISOString(),
-        end: moment().toISOString()
+        start: moment.utc().startOf(period).toISOString(),
+        end: moment.utc().toISOString()
     }:{
         start: moment.utc().startOf(period).toISOString(),
         end: moment.utc().endOf(period).toISOString()
@@ -130,8 +135,8 @@ export function getTimeRangeByPeriod (period, isToNow = false) {
 */
 export function getPreviousPeriod (periodToSubtract, periodRange, isToNow = false, offsetNumber = 1) {
     return isToNow ?{
-        start: moment().subtract(offsetNumber, periodToSubtract).startOf(periodRange).toISOString(),
-        end: moment().subtract(offsetNumber, periodToSubtract).toISOString()
+        start: moment.utc().subtract(offsetNumber, periodToSubtract).startOf(periodRange).toISOString(),
+        end: moment.utc().subtract(offsetNumber, periodToSubtract).toISOString()
     }:{
         start: moment.utc().subtract(offsetNumber, periodToSubtract).startOf(periodRange).toISOString(),
         end: moment.utc().subtract(offsetNumber, periodToSubtract).endOf(periodRange).toISOString()
@@ -166,7 +171,7 @@ export function getSumByPeriod (period, aggregates, measurementValuesByPeriod) {
 
 /**
 *   @param {object} period - {start: "YYYY-MM-DDTHH:mm:ssZ", end: "YYYY-MM-DDTHH:mm:ssZ"}
-*   @param {Immutable.Map} aggregates - the yearly-consumption
+*   @param {Immutable.Map} aggregates - the daily-consumption
 *   @param {array} measurementValuesByPeriod - array of measurementValues
 *
 *   @return {number}
@@ -174,11 +179,11 @@ export function getSumByPeriod (period, aggregates, measurementValuesByPeriod) {
 export function getSumByPeriodToNow (period, aggregates, measurementValuesByPeriod) {
     // The aggregates should be an Immutable.js.
     if (!Map.isMap(aggregates)) {
-        throw new IwwaUtilsError("[getSumByPeriod]: collections should be immutable.js");
+        throw new IwwaUtilsError("[getSumByPeriodToNow]: collections should be immutable.js");
     }
     // Period should be an object
     if (!isObject(period)) {
-        throw new IwwaUtilsError("[getSumByPeriod]: period should be an Object");
+        throw new IwwaUtilsError("[getSumByPeriodToNow]: period should be an Object");
     }
     // get the values to sum
     const measurementValues = (
@@ -198,7 +203,7 @@ export function getSumByPeriodToNow (period, aggregates, measurementValuesByPeri
 export function getAverageByYear (aggregates) {
     // The aggregates should be an Immutable.js.
     if (!Map.isMap(aggregates)) {
-        throw new IwwaUtilsError("[getAverageByPeriod]: collections should be immutable.js");
+        throw new IwwaUtilsError("[getAverageByYear]: collections should be immutable.js");
     }
 
     const numberOfYears = aggregates.size;
@@ -254,7 +259,7 @@ export function getAverageByPeriod (aggregates, offsetPeriod, offsetNumber = 1) 
 }
 
 /**
-*   @param {Immutable.Map} aggregates - the yearly-consumption
+*   @param {Immutable.Map} aggregates - the daily-consumption
 *   @param {string} offsetPeriod - offsetPeriod to take ["day", "week", "month"]
 *   @param {number} offsetNumber - how frequently take the selected offsetPeriod
 *
@@ -263,7 +268,7 @@ export function getAverageByPeriod (aggregates, offsetPeriod, offsetNumber = 1) 
 export function getAverageByPeriodToNow (aggregates, offsetPeriod, offsetNumber = 1) {
     // The aggregates should be an Immutable.js.
     if (!Map.isMap(aggregates)) {
-        throw new IwwaUtilsError("[getAverageByPeriod]: collections should be immutable.js");
+        throw new IwwaUtilsError("[getAverageByPeriodToNow]: collections should be immutable.js");
     }
     const year = moment().year();
     const numberOfPeriodInPastYear = moment([year]).diff(moment([year - 1]), offsetPeriod, true);
@@ -272,15 +277,15 @@ export function getAverageByPeriodToNow (aggregates, offsetPeriod, offsetNumber 
         // Calculate the sum for all the selected period
         .map(index => {
             const period = {
-                start: moment().subtract({[offsetPeriod]: index * offsetNumber}).startOf(offsetPeriod).toISOString(),
-                end: moment().subtract({[offsetPeriod]: index * offsetNumber}).toISOString()
+                start: moment.utc().subtract({[offsetPeriod]: index * offsetNumber}).startOf(offsetPeriod).toISOString(),
+                end: moment.utc().subtract({[offsetPeriod]: index * offsetNumber}).toISOString()
             };
             const measurementValuesByPeriod = getMeasurementValuesByPeriodToNow(period, aggregates);
             // If in a period there is a day without data, return NaN
             if (isEmpty(measurementValuesByPeriod) || measurementValuesByPeriod.indexOf("") >= 0) {
                 return NaN;
             }
-            return getSumByPeriodToNow(period, aggregates, measurementValuesByPeriod, true);
+            return getSumByPeriodToNow(period, aggregates, measurementValuesByPeriod);
         })
         // Filter all NaN. If a day in a period has consumption equal to NaN,
         // all that period is considered without data

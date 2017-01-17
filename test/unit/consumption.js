@@ -16,22 +16,22 @@ describe("`consumption` utils", () => {
     var aggregatesDaily;
 
     before(() => {
-        clock = sinon.useFakeTimers(new Date("2016-10-14").getTime());
+        clock = sinon.useFakeTimers(new Date("2016-10-14T14:20:38.273Z").getTime());
 
         for (var x=1; x <= 288; x++) {
-            measurementTimes.push(moment.utc().add(5 * x, "minutes").format("x"));
+            measurementTimes.push(moment.utc().startOf("day").add(5 * x, "minutes").format("x"));
         }
 
         for (x=1; x <= 288; x++) {
-            measurementTimes1w.push(moment.utc().subtract(1, "week").add(5 * x, "minutes").format("x"));
+            measurementTimes1w.push(moment.utc().startOf("day").subtract(1, "week").add(5 * x, "minutes").format("x"));
         }
 
         for (x=1; x <= 288; x++) {
-            measurementTimes1m.push(moment.utc().subtract(1, "month").add(5 * x, "minutes").format("x"));
+            measurementTimes1m.push(moment.utc().startOf("day").subtract(1, "month").add(5 * x, "minutes").format("x"));
         }
 
         for (x=1; x <= 288; x++) {
-            measurementTimes1y.push(moment.utc().subtract(1, "year").add(5 * x, "minutes").format("x"));
+            measurementTimes1y.push(moment.utc().startOf("day").subtract(1, "year").add(5 * x, "minutes").format("x"));
         }
 
         aggregatesDaily = fromJS({
@@ -117,8 +117,8 @@ describe("`consumption` utils", () => {
         it("returns an object of correct period range [CASE: period is `day` and isToNow is `true`]", () => {
             const ret = getTimeRangeByPeriod("day", true);
             expect(ret).to.deep.equal({
-                start: moment().startOf("day").toISOString(),
-                end: moment().toISOString()
+                start: "2016-10-14T00:00:00.000Z",
+                end: "2016-10-14T14:20:38.273Z"
             });
         });
 
@@ -143,8 +143,17 @@ describe("`consumption` utils", () => {
         it("returns an object of correct period range [CASE: period is `week` and isToNow is `true`]", () => {
             const ret = getTimeRangeByPeriod("week", true);
             expect(ret).to.deep.equal({
-                start: moment().startOf("week").toISOString(),
-                end: moment().toISOString()
+                start: "2016-10-09T00:00:00.000Z",
+                end: "2016-10-14T14:20:38.273Z"
+            });
+        });
+
+        it("returns an object of correct period range [CASE: period is `week` and isToNow is `true` and locale `it`]", () => {
+            moment.locale("it");
+            const ret = getTimeRangeByPeriod("week", true);
+            expect(ret).to.deep.equal({
+                start: "2016-10-10T00:00:00.000Z",
+                end: "2016-10-14T14:20:38.273Z"
             });
         });
 
@@ -159,8 +168,8 @@ describe("`consumption` utils", () => {
         it("returns an object of correct period range [CASE: period is `month` and isToNow is `true`]", () => {
             const ret = getTimeRangeByPeriod("month", true);
             expect(ret).to.deep.equal({
-                start: moment().startOf("month").toISOString(),
-                end: moment().toISOString()
+                start: "2016-10-01T00:00:00.000Z",
+                end: "2016-10-14T14:20:38.273Z"
             });
         });
 
@@ -175,8 +184,8 @@ describe("`consumption` utils", () => {
         it("returns an object of correct period range [CASE: period is `year` and isToNow is `true`]", () => {
             const ret = getTimeRangeByPeriod("year", true);
             expect(ret).to.deep.equal({
-                start: moment().startOf("year").toISOString(),
-                end: moment().toISOString()
+                start: "2016-01-01T00:00:00.000Z",
+                end: "2016-10-14T14:20:38.273Z"
             });
         });
 
@@ -199,8 +208,8 @@ describe("`consumption` utils", () => {
             const rangePeriod = "day";
             const ret = getPreviousPeriod(subtractPeriod, rangePeriod, true);
             expect(ret).to.deep.equal({
-                start: moment().subtract(1, subtractPeriod).startOf(rangePeriod).toISOString(),
-                end: moment().subtract(1, subtractPeriod).toISOString()
+                start: "2016-10-13T00:00:00.000Z",
+                end: "2016-10-13T14:20:38.273Z"
             });
         });
 
@@ -405,17 +414,17 @@ describe("`consumption` utils", () => {
                 start: "2016-10-14T00:00:00.000Z",
                 end: "2016-10-14T09:00:00.000Z"
             };
-            const ret = getSumByPeriodToNow(period, aggregatesDaily);
+            const ret = getSumByPeriodToNow(period, aggregatesDaily, null);
             expect(ret).to.equal(553.5489);
         });
 
-        it("return the sum of consumption of past week [CASE: week from 2016-10-03 to 2016-10-09] to now", () => {
+        it("return the sum of consumption of past week [CASE: week from 2016-10-08 to 2016-10-14] to now", () => {
             const period = {
                 start: "2016-10-08T00:00:00.000Z",
                 end: "2016-10-14T09:00:00.000Z"
             };
-            const ret = getSumByPeriodToNow(period, aggregatesDaily);
-            expect(ret).to.equal(561.6489) ;
+            const ret = getSumByPeriodToNow(period, aggregatesDaily, null);
+            expect(ret).to.equal(553.5489) ;
         });
     });
 
@@ -496,24 +505,12 @@ describe("`consumption` utils", () => {
 
         it("return the average of the weekly consumption for one year of data", () => {
             const ret = getAverageByPeriodToNow(aggregatesDaily, "week");
-            expect(ret).to.equal(1431.16);
+            expect(ret).to.equal(1240.3);
         });
 
         it("return the average of the monthly consumption for one year of data", () => {
-            const agg = fromJS({
-                "sensor1-2016-reading-activeEnergy": {
-                    "_id" : "sensor1-2016-reading-activeEnergy",
-                    "year" : "2016",
-                    "sensorId" : "sensor1",
-                    "source" : "reading",
-                    "measurementType" : "activeEnergy",
-                    "measurementValues" : ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,8.642,24.441,22.11,28.75,56.524,88.239,109.615,14.628,22.565,41.896,21.093,24.565,25.738,25.465,29.389,29.901,27.603,60.892,62.112,11.562,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
-                    "unitOfMeasurement" : "kWh",
-                    "measurementsDeltaInMs" : 86400000
-                }
-            });
-            const ret = getAverageByPeriodToNow(agg, "month");
-            expect(ret).to.equal(0);
+            const ret = getAverageByPeriodToNow(aggregatesDaily, "month");
+            expect(ret).to.equal(868.97);
         });
     });
 

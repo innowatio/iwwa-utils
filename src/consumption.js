@@ -84,7 +84,11 @@ function getMeasurementValuesByPeriod (period, aggregates) {
 */
 
 function getMeasurementValuesByPeriodToNow (period, aggregates) {
-    const sensorId = aggregates.first().get("sensorId");
+    const firstAggregate = aggregates.first() || Map();
+    const sensorId = firstAggregate.get("sensorId");
+    if (!sensorId) {
+        return [];
+    }
     const numberOfDays = parseInt(moment.utc(period.end).diff(period.start, "days")) + 1;
     const days = numberOfDays !== 0 ? range(0, numberOfDays).map(idx => {
         return moment.utc(period.start).add({days: idx}).format("YYYY-MM-DD");

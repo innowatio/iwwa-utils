@@ -1,10 +1,26 @@
 import moment from "moment";
 
-var runningInterval;
+var nextDaysIntervals = [];
 
 export function subscribeDaily (subscription) {
+    subscribeNow(subscription);
+    subscribeNextDay(subscription);
+}
+
+function subscribeNow (subscription) {
     subscription();
-    clearInterval(runningInterval);
-    const msTillNewDay = moment().endOf("day").diff(moment());
-    runningInterval = setInterval(() => this.subscribeDaily(subscription), msTillNewDay);
+}
+
+function subscribeNextDay (subscription) {
+    nextDaysIntervals.push(setInterval(() => subscribeEveryDays(subscription), getMsTillNewDay()));
+}
+
+function subscribeEveryDays (subscription) {
+    nextDaysIntervals.shift();
+    setInterval(subscription, 86400000);
+
+}
+
+function getMsTillNewDay () {
+    return moment().endOf("day").diff(moment());
 }

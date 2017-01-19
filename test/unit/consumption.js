@@ -409,6 +409,11 @@ describe("`consumption` utils", () => {
             expect(troublemaker).to.throw(IwwaUtilsError);
         });
 
+        it("throw an `IwwaUtilsError` if period is not an object", () => {
+            const ret = getSumByPeriodToNow({}, Map());
+            expect(ret).to.deep.equal(0);
+        });
+
         it("return the sum of consumption of today to now", () => {
             const period = {
                 start: "2016-10-14T00:00:00.000Z",
